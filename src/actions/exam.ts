@@ -216,8 +216,6 @@ export const getExamPaper = defineAction({
       throw new ActionError({ code: "NOT_FOUND", message: "Exam paper not found." });
     }
 
-    await pushSummary(user.id, "paper.deleted");
-
     return { paper };
   },
 });
@@ -234,6 +232,8 @@ export const deleteExamPaper = defineAction({
     if (!paper) {
       throw new ActionError({ code: "NOT_FOUND", message: "Exam paper not found." });
     }
+
+    await pushSummary(user.id, "paper.deleted");
 
     return { paper };
   },

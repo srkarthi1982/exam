@@ -29,6 +29,7 @@ This file records what was built/changed so far for the exam repo. Read first.
 
 ## 3. Task Log (Newest first)
 
+- 2026-02-02 Fixed dashboard push: getExamPaper no longer emits delete; deleteExamPaper pushes deleted event.
 - 2026-02-02 Cleaned typecheck hints (redirect pages, seed, history import).
 - 2026-02-02 Adjusted attempt runner to compute remaining seconds from startedAt.
 - 2026-02-02 Implemented Exam V1 pages (papers, attempt runner, results, history, help).
