@@ -14,6 +14,8 @@ import {
 import { z } from "astro:schema";
 import { requirePro, requireUser } from "./_guards";
 import { FREE_LIMITS } from "../lib/freeLimits";
+import { buildExamDashboardSummary } from "../dashboard/summary.schema";
+import { pushExamSummary } from "../lib/pushActivity";
 import { getQuizQuestions } from "../lib/quizApi";
 
 const getStartOfDay = (date = new Date()) => {
@@ -23,6 +25,11 @@ const getStartOfDay = (date = new Date()) => {
 };
 
 const getStartOfWeek = () => getStartOfDay(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000));
+
+const pushSummary = async (userId: string, eventType: string) => {
+  const summary = await buildExamDashboardSummary(userId);
+  await pushExamSummary({ userId, eventType, summary });
+};
 
 const enforcePaperLimit = async (context: Parameters<typeof requireUser>[0], userId: string) => {
   const [{ total } = { total: 0 }] = await db
@@ -176,6 +183,10 @@ export const createExamPaper = defineAction({
       })
       .returning();
 
+    if (paper) {
+      await pushSummary(user.id, "paper.created");
+    }
+
     return { paper };
   },
 });
@@ -205,6 +216,8 @@ export const getExamPaper = defineAction({
     if (!paper) {
       throw new ActionError({ code: "NOT_FOUND", message: "Exam paper not found." });
     }
+
+    await pushSummary(user.id, "paper.deleted");
 
     return { paper };
   },
@@ -396,6 +409,10 @@ export const submitAttempt = defineAction({
 
     for (const update of answerUpdates) {
       await db.update(ExamAnswers).set({ isCorrect: update.isCorrect }).where(eq(ExamAnswers.id, update.id));
+    }
+
+    if (updated) {
+      await pushSummary(user.id, status === "expired" ? "exam.expired" : "exam.submitted");
     }
 
     return { attempt: updated };
