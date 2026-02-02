@@ -1,0 +1,61 @@
+---
+import { AvBreadcrumb, AvButton, AvCard, AvContainer, AvEmptyState } from "@ansiversa/components";
+import AppShell from "../../layouts/AppShell.astro";
+import { FREE_LIMITS } from "../../lib/freeLimits";
+
+const title = "Exam History – Ansiversa";
+const description = "View your exam attempts.";
+const isPaid = Boolean(Astro.locals.user?.isPaid);
+const historyDays = FREE_LIMITS.historyDays;
+---
+
+<AppShell title={title} description={description}>
+  <section class="av-faq-public__crumb">
+    <AvContainer>
+      <AvBreadcrumb items={[{ label: "Exams", href: "/" }, { label: "History" }]} />
+    </AvContainer>
+  </section>
+
+  <section
+    class="av-section"
+    x-data
+    x-init={`$store.exam.setBillingStatus(${isPaid}); $store.exam.loadAttempts();`}
+  >
+    <AvContainer>
+      <div class="av-auth-stack-lg">
+        <AvCard className="av-auth-stack-md">
+          <div class="av-auth-stack-sm">
+            <div>
+              <p class="av-kicker">Exam Simulator</p>
+              <h1 class="av-section-title">Attempt history</h1>
+              <p class="av-text-soft">Free accounts see last {historyDays} days only.</p>
+            </div>
+          </div>
+        </AvCard>
+
+        <AvCard variant="soft" className="av-auth-stack-md">
+          <template x-if="$store.exam.attempts.length === 0 && !$store.exam.loading">
+            <AvEmptyState title="No attempts yet" description="Start an exam to see results." />
+          </template>
+
+          <div class="av-auth-stack-sm" x-show="$store.exam.attempts.length > 0">
+            <template x-for="attempt in $store.exam.attempts" :key="attempt.id">
+              <div class="av-card av-card-soft av-auth-stack-xs">
+                <div class="av-row-between">
+                  <div>
+                    <h3 class="av-card-heading" x-text="`Attempt #${attempt.id}`"></h3>
+                    <p class="av-text-soft" x-text="attempt.status"></p>
+                  </div>
+                  <div class="av-row-wrap">
+                    <a class="av-btn-ghost av-btn-sm" x-bind:href="`/results/${attempt.id}`">Results</a>
+                  </div>
+                </div>
+                <p class="av-text-soft" x-text="new Date(attempt.startedAt).toLocaleString()"></p>
+              </div>
+            </template>
+          </div>
+        </AvCard>
+      </div>
+    </AvContainer>
+  </section>
+</AppShell>

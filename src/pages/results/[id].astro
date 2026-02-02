@@ -1,0 +1,88 @@
+---
+import { AvBreadcrumb, AvButton, AvCard, AvContainer } from "@ansiversa/components";
+import { actions } from "astro:actions";
+import AppShell from "../../layouts/AppShell.astro";
+
+const attemptId = Number.parseInt(Astro.params.id ?? "", 10);
+if (!Number.isFinite(attemptId)) {
+  throw new Error("Invalid attempt id.");
+}
+
+const title = "Exam Results – Ansiversa";
+const description = "Review your exam results.";
+const isPaid = Boolean(Astro.locals.user?.isPaid);
+
+const attemptResult = await Astro.callAction(actions.exam.getAttempt, { attemptId });
+const attemptData = (attemptResult as any)?.data ?? (attemptResult as any) ?? {};
+const attempt = attemptData?.attempt;
+
+const reviewResult = await Astro.callAction(actions.exam.getAttemptReview, {
+  attemptId,
+  includeExplanations: isPaid,
+});
+const reviewData = (reviewResult as any)?.data ?? (reviewResult as any) ?? {};
+const review = (reviewData?.review ?? []) as Array<{ questionIndex: number; question: any; selectedOption?: string | null }>;
+---
+
+<AppShell title={title} description={description}>
+  <section class="av-faq-public__crumb">
+    <AvContainer>
+      <AvBreadcrumb items={[{ label: "Exams", href: "/" }, { label: "Results" }]} />
+    </AvContainer>
+  </section>
+
+  <section class="av-section">
+    <AvContainer>
+      <div class="av-auth-stack-lg">
+        <AvCard className="av-auth-stack-md">
+          <div class="av-auth-stack-sm">
+            <div>
+              <p class="av-kicker">Exam Simulator</p>
+              <h1 class="av-section-title">Attempt #{attemptId} results</h1>
+              <p class="av-text-soft">Score: {attempt?.percent ?? 0}%</p>
+              <p class="av-text-soft">
+                Correct: {attempt?.correctCount ?? 0} · Wrong: {attempt?.wrongCount ?? 0} · Unattempted: {attempt?.unattemptedCount ?? 0}
+              </p>
+            </div>
+            <div class="av-row-wrap">
+              <AvButton href="/history">View history</AvButton>
+            </div>
+          </div>
+        </AvCard>
+
+        {!isPaid ? (
+          <AvCard variant="soft" className="av-auth-stack-md">
+            <div class="av-auth-stack-sm">
+              <div class="av-row-between">
+                <div>
+                  <h2 class="av-card-heading">Review with explanations</h2>
+                  <p class="av-text-soft">Pro unlocks explanations and full review mode.</p>
+                </div>
+                <span class="av-badge av-badge-primary">Pro</span>
+              </div>
+              <AvButton href="/pricing" variant="ghost">Upgrade to Pro</AvButton>
+            </div>
+          </AvCard>
+        ) : null}
+
+        <AvCard variant="soft" className="av-auth-stack-md">
+          <div class="av-auth-stack-sm">
+            <h2 class="av-card-heading">Review</h2>
+            <div class="av-auth-stack-sm">
+              {review.map((item) => (
+                <div class="av-card av-card-soft av-auth-stack-xs">
+                  <p class="av-text-strong">Q{item.questionIndex + 1}</p>
+                  <p class="av-text-soft">{item.question?.question || item.question?.title}</p>
+                  <p class="av-text-soft">Your answer: {item.selectedOption ?? "—"}</p>
+                  {isPaid && item.question?.explanation ? (
+                    <p class="av-text-soft">Explanation: {item.question?.explanation}</p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        </AvCard>
+      </div>
+    </AvContainer>
+  </section>
+</AppShell>
