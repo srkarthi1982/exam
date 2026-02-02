@@ -29,6 +29,7 @@ This file records what was built/changed so far for the exam repo. Read first.
 
 ## 3. Task Log (Newest first)
 
+- 2026-02-02 Cleaned typecheck hints (redirect pages, seed, history import).
 - 2026-02-02 Adjusted attempt runner to compute remaining seconds from startedAt.
 - 2026-02-02 Implemented Exam V1 pages (papers, attempt runner, results, history, help).
 - 2026-02-02 Added exam actions with FREE_LIMITS + requirePro gating.
@@ -43,6 +44,7 @@ This file records what was built/changed so far for the exam repo. Read first.
 
 - 2026-02-02 `npm run typecheck` (pass; 8 hints logged).
 - 2026-02-02 `npm run build` (pass).
+- 2026-02-02 `npm run typecheck` (pass; 0 hints).
 
 ---
 

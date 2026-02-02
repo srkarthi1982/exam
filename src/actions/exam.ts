@@ -25,8 +25,6 @@ const getStartOfDay = (date = new Date()) => {
   return copy;
 };
 
-const getStartOfWeek = () => getStartOfDay(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000));
-
 const pushSummary = async (userId: string, eventType: string) => {
   const summary = await buildExamDashboardSummary(userId);
   await pushExamSummary({ userId, eventType, summary });
