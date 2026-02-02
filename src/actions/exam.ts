@@ -16,6 +16,7 @@ import { requirePro, requireUser } from "./_guards";
 import { FREE_LIMITS } from "../lib/freeLimits";
 import { buildExamDashboardSummary } from "../dashboard/summary.schema";
 import { pushExamSummary } from "../lib/pushActivity";
+import { notifyParent } from "../lib/notifyParent";
 import { getQuizQuestions } from "../lib/quizApi";
 
 const getStartOfDay = (date = new Date()) => {
@@ -412,6 +413,12 @@ export const submitAttempt = defineAction({
     }
 
     if (updated) {
+      await notifyParent({
+        userId: user.id,
+        eventType: "exam_submitted",
+        title: status === "expired" ? "Exam time is up" : "Exam submitted",
+        url: `/results/${updated.id}`,
+      });
       await pushSummary(user.id, status === "expired" ? "exam.expired" : "exam.submitted");
     }
 
