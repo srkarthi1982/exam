@@ -1,0 +1,91 @@
+---
+import { AvBreadcrumb, AvButton, AvCard, AvContainer } from "@ansiversa/components";
+import { actions } from "astro:actions";
+import AppShell from "../../layouts/AppShell.astro";
+
+const attemptId = Number.parseInt(Astro.params.id ?? "", 10);
+if (!Number.isFinite(attemptId)) {
+  throw new Error("Invalid attempt id.");
+}
+
+const title = "Exam Attempt – Ansiversa";
+const description = "Complete your exam before time runs out.";
+
+const attemptResult = await Astro.callAction(actions.exam.getAttempt, { attemptId });
+const attemptData = (attemptResult as any)?.data ?? (attemptResult as any) ?? {};
+const attempt = attemptData?.attempt;
+
+const reviewResult = await Astro.callAction(actions.exam.getAttemptReview, { attemptId, includeExplanations: false });
+const reviewData = (reviewResult as any)?.data ?? (reviewResult as any) ?? {};
+const review = (reviewData?.review ?? []) as Array<{ questionIndex: number; question: any; selectedOption?: string | null }>;
+
+const startedAtMs = attempt?.startedAt ? new Date(attempt.startedAt).getTime() : null;
+const elapsedSeconds = startedAtMs ? Math.floor((Date.now() - startedAtMs) / 1000) : 0;
+const totalSeconds = (attempt?.timeLimitMinutes ?? 0) * 60;
+const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+---
+
+<AppShell title={title} description={description}>
+  <section class="av-faq-public__crumb">
+    <AvContainer>
+      <AvBreadcrumb
+        items={[
+          { label: "Exams", href: "/" },
+          { label: "Attempt" },
+        ]}
+      />
+    </AvContainer>
+  </section>
+
+  <section
+    class="av-section"
+    x-data
+    x-init={`$store.exam.currentAttempt = ${JSON.stringify(attempt)}; $store.exam.setQuestions(${JSON.stringify(review)}); $store.exam.remainingSeconds = ${remainingSeconds};`}
+  >
+    <AvContainer>
+      <div class="av-auth-stack-lg">
+        <AvCard className="av-auth-stack-md">
+          <div class="av-auth-stack-sm">
+            <div>
+              <p class="av-kicker">Exam Simulator</p>
+              <h1 class="av-section-title">Attempt #{attemptId}</h1>
+              <p class="av-text-soft">Time limit: {attempt?.timeLimitMinutes ?? 0} min</p>
+            </div>
+            <div class="av-row-wrap">
+              <AvButton type="button" @click="$store.exam.startTimer()">Start</AvButton>
+              <AvButton type="button" variant="ghost" @click="$store.exam.pauseTimer()">Pause</AvButton>
+              <AvButton type="button" variant="ghost" @click="$store.exam.resumeTimer()">Resume</AvButton>
+              <AvButton type="button" variant="ghost" @click="$store.exam.submitAttempt(false)">Submit</AvButton>
+            </div>
+            <div class="av-card av-card-soft av-auth-stack-xs">
+              <p class="av-text-soft">Status: <span x-text="$store.exam.timerStatus"></span></p>
+              <p class="av-text-soft">
+                Remaining: <span x-text="Math.floor($store.exam.remainingSeconds / 60)"></span>m
+                <span x-text="String($store.exam.remainingSeconds % 60).padStart(2, '0')"></span>s
+              </p>
+            </div>
+          </div>
+        </AvCard>
+
+        <AvCard variant="soft" className="av-auth-stack-md" x-show="$store.exam.currentQuestions.length > 0">
+          <div class="av-auth-stack-sm">
+            <div class="av-row-between">
+              <h2 class="av-card-heading" x-text="`Question ${$store.exam.currentIndex + 1}`"></h2>
+              <button class="av-btn-ghost av-btn-sm" type="button" @click="$store.exam.toggleFlag($store.exam.currentIndex)">Flag</button>
+            </div>
+            <p class="av-text-soft" x-text="$store.exam.currentQuestions[$store.exam.currentIndex]?.question?.question || $store.exam.currentQuestions[$store.exam.currentIndex]?.question?.title"></p>
+            <div class="av-auth-stack-xs">
+              <template x-for="option in ($store.exam.currentQuestions[$store.exam.currentIndex]?.question?.options || $store.exam.currentQuestions[$store.exam.currentIndex]?.question?.choices || [])" :key="option">
+                <button class="av-btn-ghost" type="button" @click="$store.exam.selectAnswer($store.exam.currentIndex, option)" x-text="option"></button>
+              </template>
+            </div>
+            <div class="av-row-between">
+              <AvButton type="button" variant="ghost" @click="$store.exam.currentIndex = Math.max(0, $store.exam.currentIndex - 1)">Prev</AvButton>
+              <AvButton type="button" variant="ghost" @click="$store.exam.currentIndex = Math.min($store.exam.currentQuestions.length - 1, $store.exam.currentIndex + 1)">Next</AvButton>
+            </div>
+          </div>
+        </AvCard>
+      </div>
+    </AvContainer>
+  </section>
+</AppShell>

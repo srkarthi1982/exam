@@ -1,0 +1,61 @@
+---
+import { AvBreadcrumb, AvButton, AvCard, AvContainer } from "@ansiversa/components";
+import AppShell from "../../layouts/AppShell.astro";
+
+const paperId = Number.parseInt(Astro.params.id ?? "", 10);
+if (!Number.isFinite(paperId)) {
+  throw new Error("Invalid paper id.");
+}
+
+const title = "Exam Paper – Ansiversa";
+const description = "Review paper settings and start an exam.";
+---
+
+<AppShell title={title} description={description}>
+  <section class="av-faq-public__crumb">
+    <AvContainer>
+      <AvBreadcrumb
+        items={[
+          { label: "Exams", href: "/" },
+          { label: "Papers", href: "/papers" },
+          { label: "Paper" },
+        ]}
+      />
+    </AvContainer>
+  </section>
+
+  <section class="av-section" x-data x-init={`$store.exam.loadPaper(${paperId});`}>
+    <AvContainer>
+      <div class="av-auth-stack-lg">
+        <AvCard className="av-auth-stack-md">
+          <div class="av-auth-stack-sm">
+            <div>
+              <p class="av-kicker">Exam Simulator</p>
+              <h1 class="av-section-title" x-text="$store.exam.currentPaper?.title || 'Exam paper'"></h1>
+              <p class="av-text-soft">
+                <span x-text="$store.exam.currentPaper ? `${$store.exam.currentPaper.questionCount} questions` : ''"></span>
+                <span x-text="$store.exam.currentPaper ? ` · ${$store.exam.currentPaper.timeLimitMinutes} min` : ''"></span>
+              </p>
+            </div>
+            <div class="av-row-wrap">
+              <AvButton
+                type="button"
+                @click={`$store.exam.startAttempt(${paperId})`}
+                :disabled="$store.exam.loading"
+              >Start exam</AvButton>
+            </div>
+            <p class="av-text-soft" x-show="$store.exam.error" x-text="$store.exam.error"></p>
+            <p class="av-text-soft" x-show="$store.exam.success" x-text="$store.exam.success"></p>
+            <div x-show="$store.exam.currentAttempt">
+              <AvButton
+                type="button"
+                variant="ghost"
+                x-bind:href="`/attempts/${$store.exam.currentAttempt?.id}`"
+              >Continue attempt</AvButton>
+            </div>
+          </div>
+        </AvCard>
+      </div>
+    </AvContainer>
+  </section>
+</AppShell>

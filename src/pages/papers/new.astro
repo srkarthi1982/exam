@@ -1,0 +1,103 @@
+---
+import {
+  AvBreadcrumb,
+  AvButton,
+  AvCard,
+  AvContainer,
+  AvInput,
+  AvSelect,
+} from "@ansiversa/components";
+import AppShell from "../../layouts/AppShell.astro";
+import { FREE_LIMITS } from "../../lib/freeLimits";
+
+const title = "New Exam Paper – Ansiversa";
+const description = "Create a new exam paper from the Quiz API.";
+const isPaid = Boolean(Astro.locals.user?.isPaid);
+const maxPapers = FREE_LIMITS.maxPapers;
+---
+
+<AppShell title={title} description={description}>
+  <section class="av-faq-public__crumb">
+    <AvContainer>
+      <AvBreadcrumb items={[{ label: "Exams", href: "/" }, { label: "New paper" }]} />
+    </AvContainer>
+  </section>
+
+  <section class="av-section" x-data={`{ maxPapers: ${maxPapers} }`} x-init={`$store.exam.setBillingStatus(${isPaid});`}>
+    <AvContainer>
+      <div class="av-auth-stack-lg">
+        <AvCard className="av-auth-stack-md">
+          <div class="av-auth-stack-sm">
+            <div>
+              <p class="av-kicker">Exam Simulator</p>
+              <h1 class="av-section-title">Create exam paper</h1>
+              <p class="av-text-soft">Choose a Quiz API source and configure the exam.</p>
+            </div>
+
+            <form class="av-auth-stack-sm" @submit.prevent="$store.exam.createPaper()">
+              <div class="av-auth-stack-xs">
+                <AvInput
+                  label="Paper title"
+                  name="paper-title"
+                  placeholder="e.g., JEE Physics Mock"
+                  x-model="$store.exam.paperForm.title"
+                  required
+                />
+                <AvInput
+                  label="Quiz source ref"
+                  name="paper-source"
+                  placeholder="quizId or topic key"
+                  x-model="$store.exam.paperForm.sourceRef"
+                  required
+                />
+                <div class="av-grid-cols-2">
+                  <AvSelect label="Questions" name="paper-questions" x-model="$store.exam.paperForm.questionCount">
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="30">30</option>
+                    <option value="50">50</option>
+                  </AvSelect>
+                  <AvSelect label="Time limit (minutes)" name="paper-time" x-model="$store.exam.paperForm.timeLimitMinutes">
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="30">30</option>
+                    <option value="60">60</option>
+                  </AvSelect>
+                </div>
+                <AvInput
+                  label="Difficulty (optional)"
+                  name="paper-difficulty"
+                  placeholder="easy / medium / hard"
+                  x-model="$store.exam.paperForm.difficulty"
+                />
+                <div class="av-card av-card-soft av-auth-stack-xxs">
+                  <p class="av-text-soft">Shuffle questions</p>
+                  <AvButton
+                    type="button"
+                    variant="ghost"
+                    @click="$store.exam.paperForm.shuffleQuestions = !$store.exam.paperForm.shuffleQuestions"
+                    x-text="$store.exam.paperForm.shuffleQuestions ? 'On' : 'Off'"
+                  ></AvButton>
+                </div>
+              </div>
+              <div class="av-row-wrap">
+                <AvButton type="submit" :disabled="$store.exam.loading">Create paper</AvButton>
+              </div>
+              <p class="av-text-soft" x-show="$store.exam.error" x-text="$store.exam.error"></p>
+              <p class="av-text-soft" x-show="$store.exam.success" x-text="$store.exam.success"></p>
+            </form>
+
+            <div
+              class="av-card av-card-soft av-auth-stack-xs"
+              x-show="!$store.exam.isPaid && $store.exam.papers.length >= maxPapers"
+            >
+              <p class="av-text-strong">Free paper limit reached.</p>
+              <p class="av-text-soft">Upgrade to Pro to create more than {maxPapers} papers.</p>
+              <AvButton href="/pricing" variant="ghost">View pricing</AvButton>
+            </div>
+          </div>
+        </AvCard>
+      </div>
+    </AvContainer>
+  </section>
+</AppShell>

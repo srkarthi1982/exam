@@ -1,0 +1,57 @@
+---
+import { AvBreadcrumb, AvButton, AvCard, AvContainer, AvEmptyState } from "@ansiversa/components";
+import AppShell from "../../layouts/AppShell.astro";
+
+const title = "Exam Papers – Ansiversa";
+const description = "Manage your exam papers.";
+---
+
+<AppShell title={title} description={description}>
+  <section class="av-faq-public__crumb">
+    <AvContainer>
+      <AvBreadcrumb items={[{ label: "Exams", href: "/" }, { label: "Papers" }]} />
+    </AvContainer>
+  </section>
+
+  <section class="av-section" x-data x-init="$store.exam.loadPapers()">
+    <AvContainer>
+      <div class="av-auth-stack-lg">
+        <AvCard className="av-auth-stack-md">
+          <div class="av-auth-stack-sm">
+            <div>
+              <p class="av-kicker">Exam Simulator</p>
+              <h1 class="av-section-title">Exam papers</h1>
+              <p class="av-text-soft">Review and start any saved exam paper.</p>
+            </div>
+            <div class="av-row-wrap">
+              <AvButton href="/papers/new">Create new paper</AvButton>
+            </div>
+          </div>
+        </AvCard>
+
+        <AvCard variant="soft" className="av-auth-stack-md">
+          <template x-if="$store.exam.papers.length === 0 && !$store.exam.loading">
+            <AvEmptyState title="No exam papers" description="Create your first paper." />
+          </template>
+
+          <div class="av-auth-stack-sm" x-show="$store.exam.papers.length > 0">
+            <template x-for="paper in $store.exam.papers" :key="paper.id">
+              <div class="av-card av-card-soft av-auth-stack-xs">
+                <div class="av-row-between">
+                  <div>
+                    <h3 class="av-card-heading" x-text="paper.title"></h3>
+                    <p class="av-text-soft" x-text="`${paper.questionCount} questions · ${paper.timeLimitMinutes} min`"></p>
+                  </div>
+                  <div class="av-row-wrap">
+                    <a class="av-btn-primary av-btn-sm" x-bind:href="`/papers/${paper.id}`">Open</a>
+                    <button class="av-btn-ghost av-btn-sm" type="button" @click="$store.exam.deletePaper(paper)">Delete</button>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </AvCard>
+      </div>
+    </AvContainer>
+  </section>
+</AppShell>
